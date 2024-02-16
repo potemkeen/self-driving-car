@@ -2,10 +2,10 @@ import { Controls } from './controls';
 import { Sensor } from './sensor';
 import { polysIntersect } from './utils';
 import { NeuralNetwork } from './network';
-import carImg from '../static/car.png';
+import carImg from '../../static/car.png';
 
 export class Car {
-  constructor(x, y, width, height, controlType, maxSpeed = 3, color) {
+  constructor(x, y, width, height, controlType, angle = 0, maxSpeed = 3, color) {
     this.x = x;
     this.y = y;
     this.width = width;
@@ -15,9 +15,9 @@ export class Car {
     this.accelaretion = 0.2;
     this.maxSpeed = maxSpeed;
     this.friction = 0.05;
-    this.angle = 0;
+    this.angle = angle;
     this.damaged = false;
-    this.trafficPassed = 0;
+    this.fittness = 0;
 
     this.useBrain = controlType === 'AI';
 
@@ -62,6 +62,7 @@ export class Car {
     }
 
     this.#move();
+    this.fittness += this.speed;
     this.polygon = this.#createPolygon();
     if (this.sensor) {
       this.sensor.update(roadBorders, traffic);
@@ -76,12 +77,6 @@ export class Car {
         this.controls.right = outputs[2];
         this.controls.reverse = outputs[3];
       }
-    }
-  }
-
-  handleCollision(roadBorders, traffic = []) {
-    if (this.damaged) {
-      return;
     }
     this.damaged = this.#assessDamage(roadBorders, traffic);
   }

@@ -1,14 +1,17 @@
 import { Car } from './car';
-import { Road } from './road';
 import { Visualizer } from './visualizier';
 import { NeuralNetwork } from './network';
-import { getRandomColor } from './utils';
-import initBrain from './brain.json';
+import initBrain from '../brain.json';
+import initWorld from '../world.json';
+import { World } from './world/world';
+import { Graph } from './world/math/graph';
+import { Viewport } from './world/viewport';
+import { angle, scale } from './world/math/utils';
+import { Start } from './world/markings/start';
+import { Point } from './world/primitives/point';
 
-const LANE_WIDTH = 60;
-const LANES = 3;
-const WIDTH = LANE_WIDTH * LANES;
 const BRAIN_LS_KEY = 'brain';
+const WORLD_LS_KEY = 'world';
 const VISITED_LS_KEY = 'visited-before';
 
 const visitedBefore = localStorage.getItem(VISITED_LS_KEY);
@@ -18,10 +21,16 @@ if (!visitedBefore) {
     localStorage.setItem(BRAIN_LS_KEY, JSON.stringify(initBrain));
   }
 }
+if (!localStorage.getItem(WORLD_LS_KEY)) {
+  localStorage.setItem(WORLD_LS_KEY, JSON.stringify(initWorld));
+}
+
+const fileInput = document.getElementById('file-input');
+fileInput.addEventListener('change', loadWorld);
 
 const carCanvas = document.getElementById('car-canvas');
 carCanvas.height = window.innerHeight;
-carCanvas.width = WIDTH;
+carCanvas.width = window.innerWidth - 627;
 
 const networkCanvas = document.getElementById('network-canvas');
 networkCanvas.height = window.innerHeight;
@@ -32,7 +41,6 @@ const discardButton = document.getElementById('discard');
 const restartButton = document.getElementById('restart');
 const mutationAmountSelect = document.getElementById('mutation-amount');
 const carCountSelect = document.getElementById('car-count');
-const trafficRowsCountSelect = document.getElementById('traffic-rows-count');
 const fastForwardMultiplierSelect = document.getElementById(
   'fast-forward-multiplier',
 );
@@ -46,14 +54,12 @@ mutationAmountSelect.addEventListener('change', (e) => {
 carCountSelect.addEventListener('change', (e) => {
   carCount = e.target.value;
 });
-trafficRowsCountSelect.addEventListener('change', (e) => {
-  trafficRows = e.target.value;
-});
 fastForwardMultiplierSelect.addEventListener('change', (e) => {
   fastForwardMultiplier = e.target.value;
 });
 
 window.onresize = () => {
+  carCanvas.width = window.innerWidth - networkCanvas.width - 127;
   carCanvas.height = window.innerHeight;
   networkCanvas.height = window.innerHeight;
 };
@@ -61,17 +67,18 @@ window.onresize = () => {
 const carCtx = carCanvas.getContext('2d');
 const networkCtx = networkCanvas.getContext('2d');
 
-const road = new Road(carCanvas.width / 2, carCanvas.width * 0.9, LANES);
+const worldString = localStorage.getItem(WORLD_LS_KEY);
+const worldInfo = worldString ? JSON.parse(worldString) : null;
+let world = worldInfo ? World.load(worldInfo) : new World(new Graph());
+const viewport = new Viewport(carCanvas, world.zoom, world.offset);
 
 let fastForwardMultiplier = 1;
 let mutationAmount = 0.1;
 
 let carCount = 100;
 let cars = [];
+const roadBorders = world.roadBorders.map((s) => [s.p1, s.p2]);
 let bestCar;
-
-let trafficRows = 10;
-let traffic = [];
 
 let isStarted = false;
 
@@ -85,11 +92,30 @@ function discard() {
   localStorage.removeItem(BRAIN_LS_KEY);
 }
 
+function loadWorld() {
+  const file = event.target.files[0];
+
+  if (!file) {
+    alert('No file selected!');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.readAsText(file);
+
+  reader.onload = (event) => {
+    const fileContent = event.target.result;
+    const jsonData = JSON.parse(fileContent);
+    world = World.load(jsonData);
+    localStorage.setItem(WORLD_LS_KEY, JSON.stringify(world));
+    location.reload();
+  }
+}
+
 function start() {
   isStarted = true;
   cars = generateCars(carCount);
   bestCar = cars[0];
-  cars[0].color = 'yellow';
   const brainJSON = localStorage.getItem(BRAIN_LS_KEY);
   if (brainJSON) {
     for (let i = 0; i < cars.length; i++) {
@@ -99,7 +125,6 @@ function start() {
       }
     }
   }
-  traffic = generateTraffic(trafficRows);
   requestAnimationFrame(animate);
 }
 
@@ -108,82 +133,45 @@ function restart() {
   requestAnimationFrame(start);
 }
 
-function generateTraffic(n) {
-  const traffic = [];
-  for (let i = 0; i < n; i++) {
-    const emptyLane = Math.floor(Math.random() * LANES);
-    for (let j = 0; j < LANES; j++) {
-      if (j !== emptyLane) {
-        traffic.push(
-          new Car(
-            road.getLaneCenter(j),
-            -200 * i,
-            30,
-            50,
-            'DUMMY',
-            2,
-            getRandomColor(),
-          ),
-        );
-      }
-    }
-  }
-
-  return traffic;
-}
-
 function generateCars(n) {
+  const startPoints = world.markings.filter((m) => m instanceof Start);
+  const startPoint = startPoints.length > 0
+      ? startPoints[0].center
+      : new Point(100, 100);
+  const dir = startPoints.length > 0
+      ? startPoints[0].directionVector
+      : new Point(0, -1);
+  const startAngle = -angle(dir) + Math.PI / 2;
   const cars = [];
   for (let i = 1; i <= n; i++) {
-    cars.push(new Car(road.getLaneCenter(1), 150, 30, 50, 'AI', 3, 'blue'));
+    cars.push(new Car(startPoint.x, startPoint.y, 30, 50, 'AI', startAngle, 3, 'blue'));
   }
 
   return cars;
 }
 
 function fitnessFunc(bestCar, car) {
-  if (car.trafficPassed > bestCar.trafficPassed) {
-    return car;
-  }
-  if (car.trafficPassed === bestCar.trafficPassed && car.y < bestCar.y) {
-    return car;
-  }
-  return bestCar;
+  return car.fittness > bestCar.fittness ? car : bestCar;
 }
 
 function update() {
-  for (let i = 0; i < traffic.length; i++) {
-    traffic[i].update(road.borders, traffic);
-  }
   for (let i = 0; i < cars.length; i++) {
-    cars[i].update(road.borders, traffic);
-  }
-  for (let i = 0; i < traffic.length; i++) {
-    traffic[i].handleCollision(road.borders, traffic);
-  }
-  for (let i = 0; i < cars.length; i++) {
-    cars[i].handleCollision(road.borders, traffic);
+    cars[i].update(roadBorders, []);
   }
 
   bestCar = cars.reduce(fitnessFunc);
+  world.cars = cars;
+  world.bestCar = bestCar;
 }
 
 function draw(time) {
   carCtx.clearRect(0, 0, carCanvas.width, carCanvas.height);
-  carCtx.save();
-  carCtx.translate(0, -bestCar.y + carCanvas.height * 0.7);
-  road.draw(carCtx);
-  for (let i = 0; i < traffic.length; i++) {
-    traffic[i].draw(carCtx);
-  }
-  carCtx.globalAlpha = 0.2;
-  for (let i = 0; i < cars.length; i++) {
-    cars[i].draw(carCtx);
-  }
-  carCtx.globalAlpha = 1;
-  bestCar.draw(carCtx, true);
+  viewport.offset.x = -bestCar.x;
+  viewport.offset.y = -bestCar.y;
 
-  carCtx.restore();
+  viewport.reset();
+  const viewPoint = scale(viewport.getOffset(), -1);
+  world.draw(carCtx, viewPoint, false);
 
   networkCtx.rect(0, 0, networkCanvas.width, networkCanvas.height);
   networkCtx.fillStyle = 'black';

@@ -35,15 +35,6 @@
         </select>
     </div>
     <div class="select">
-        🚘🚘🚘
-        <select name="trafficRowsCounts" id="traffic-rows-count">
-            <option value="5">5</option>
-            <option value="10" selected>10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-        </select>
-    </div>
-    <div class="select">
         ⏩
         <select name="fastForwardMultiplier" id="fast-forward-multiplier">
             <option value="1" selected>x1</option>
@@ -53,8 +44,17 @@
         </select>
     </div>
     <button class="button" id="restart">Restart</button>
+    <label for="file-input" class="file-input-label">
+        📁
+        <input
+                type="file"
+                id="file-input"
+                accept=".world"
+        />
+    </label>
+    &nbsp;
 </div>
 <canvas id="network-canvas"></canvas>
-<script type="module" src="./index.js"></script>
+<script type="module" src="js/index.js"></script>
 </body>
 </html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>World Editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div>
+    <canvas id="canvas" style="background-color: #2a5"></canvas>
+    <div id="controls">
+        <button id="dispose">🗑️</button>
+        <button id="save">💾</button>
+        <label for="file-input" class="file-input-label">
+            📁
+            <input
+                    type="file"
+                    id="file-input"
+                    accept=".world"
+            />
+        </label>
+        <button id="osm">🗺️</button>
+        &nbsp;
+        <button id="graph">🌐</button>
+        <button id="stop">🛑</button>
+        <button id="yield">⚠️</button>
+        <button id="crossing">🚶</button>
+        <button id="parking">🅿️</button>
+        <button id="light">🚦</button>
+        <button id="start">🚙</button>
+        <button id="target">🎯</button>
+
+        <div id="osm-panel" style="display: none;">
+        <textarea
+                id="osm-data-container"
+                rows="10"
+                cols="50"
+                placeholder="Paste OSM data here"
+        ></textarea>
+            <div>
+                <button id="osm-parse">✔</button>
+                <button id="osm-close">❌</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="module" src="world/index.js"></script>
+</body>
+</html>

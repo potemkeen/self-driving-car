@@ -7,7 +7,7 @@
 </head>
 <body>
 <canvas id="car-canvas"></canvas>
-<div class="buttons">
+<div class="buttons" id="buttons">
     <button class="button" id="save">💾</button>
     <button class="button" id="discard">🗑️</button>
     <div class="select">
@@ -53,8 +53,12 @@
         />
     </label>
     &nbsp;
+    <a href="world.html">World Editor</a>
 </div>
-<canvas id="network-canvas"></canvas>
-<script type="module" src="js/index.js"></script>
+<div>
+    <canvas id="network-canvas"></canvas>
+    <canvas id="minimap-canvas"></canvas>
+</div>
+<script type="module" src="index.js"></script>
 </body>
 </html>

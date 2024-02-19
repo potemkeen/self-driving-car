@@ -14,15 +14,15 @@ import { Osm } from './math/osm';
 import { BuildingEditor } from './editors/building-editor';
 
 const editors = {
-    graph: GraphEditor,
-    stop: StopEditor,
-    crossing: CrossingEditor,
-    parking: ParkingEditor,
-    start: StartEditor,
-    light: LightEditor,
-    yield: YieldEditor,
-    target: TargetEditor,
-    building: BuildingEditor,
+  graph: GraphEditor,
+  stop: StopEditor,
+  crossing: CrossingEditor,
+  parking: ParkingEditor,
+  start: StartEditor,
+  light: LightEditor,
+  yield: YieldEditor,
+  target: TargetEditor,
+  building: BuildingEditor,
 };
 
 const canvas = document.getElementById('canvas');
@@ -56,117 +56,124 @@ const viewport = new Viewport(canvas, world.zoom, world.offset);
 
 const tools = {};
 for (const title in editors) {
-    const btn = document.getElementById(title);
-    btn.addEventListener('click', () => setMode(title));
-    const Editor = editors[title];
-    let data = world;
-    if (title === 'graph') {
-        data = graph;
-    }
-    if (title === 'building') {
-        data = world.buildings
-    }
-    tools[title] = {button: btn, editor: new Editor(viewport, data)};
+  const btn = document.getElementById(title);
+  btn.addEventListener('click', () => setMode(title));
+  const Editor = editors[title];
+  let data = world;
+  if (title === 'graph') {
+    data = graph;
+  }
+  if (title === 'building') {
+    data = world.buildings;
+  }
+  tools[title] = { button: btn, editor: new Editor(viewport, data) };
 }
 
 let oldGraphHash = graph.hash();
 
-setMode('graph');
+disableEditors();
+if (world.graph.points.length === 0) {
+  // enable graph editor if world is empty
+  setMode('graph');
+}
 
 animate();
+
 function animate() {
-    viewport.reset();
-    if (graph.hash() !== oldGraphHash) {
-        world.generate();
-        oldGraphHash = graph.hash();
-    }
-    const viewPoint = scale(viewport.getOffset(), -1);
-    const renderRadius = Math.hypot(canvas.width, canvas.height)/2 * viewport.zoom;
-    world.draw(ctx, viewPoint, true, renderRadius);
-    ctx.globalAlpha = 0.3;
-    for (const tool of Object.values(tools)) {
-        tool.editor.display();
-    }
-    requestAnimationFrame(animate);
+  viewport.reset();
+  if (graph.hash() !== oldGraphHash) {
+    world.generate();
+    oldGraphHash = graph.hash();
+  }
+  const viewPoint = scale(viewport.getOffset(), -1);
+  const renderRadius =
+    (Math.hypot(canvas.width, canvas.height) / 2) * viewport.zoom;
+  world.draw(ctx, viewPoint, true, renderRadius);
+  ctx.globalAlpha = 0.3;
+  for (const tool of Object.values(tools)) {
+    tool.editor.display();
+  }
+  requestAnimationFrame(animate);
 }
 
 function dispose() {
-    tools.graph && tools.graph.editor.dispose();
-    world.buildings.length = 0;
-    world.markings.length = 0;
+  tools.graph && tools.graph.editor.dispose();
+  world.buildings.length = 0;
+  world.markings.length = 0;
+  setMode('graph');
 }
 
 function load() {
-    const file = event.target.files[0];
+  const file = event.target.files[0];
 
-    if (!file) {
-        alert('No file selected!');
-        return;
-    }
+  if (!file) {
+    alert('No file selected!');
+    return;
+  }
 
-    const reader = new FileReader();
-    reader.readAsText(file);
+  const reader = new FileReader();
+  reader.readAsText(file);
 
-    reader.onload = (event) => {
-        const fileContent = event.target.result;
-        const jsonData = JSON.parse(fileContent);
-        world = World.load(jsonData);
-        localStorage.setItem('world', JSON.stringify(world));
-        location.reload();
-    };
+  reader.onload = (event) => {
+    const fileContent = event.target.result;
+    const jsonData = JSON.parse(fileContent);
+    world = World.load(jsonData);
+    localStorage.setItem('world', JSON.stringify(world));
+    location.reload();
+  };
 }
 
 function save() {
-    world.zoom = viewport.zoom;
-    world.offset = viewport.offset;
+  world.zoom = viewport.zoom;
+  world.offset = viewport.offset;
 
-    const element = document.createElement('a');
-    element.setAttribute(
-        'href',
-        `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(world))}`
-    );
-    const fileName = `${new Date()
-        .toISOString()
-        .slice(0, 19)
-        .replace(/[-T:]/g, '')
-        .replace(/\./g, '')}.world`;
-    element.setAttribute('download', fileName);
-    element.click();
+  const element = document.createElement('a');
+  element.setAttribute(
+    'href',
+    `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(world))}`,
+  );
+  const fileName = `${new Date()
+    .toISOString()
+    .slice(0, 19)
+    .replace(/[-T:]/g, '')
+    .replace(/\./g, '')}.world`;
+  element.setAttribute('download', fileName);
+  element.click();
 
-    localStorage.setItem('world', JSON.stringify(world));
+  localStorage.setItem('world', JSON.stringify(world));
 }
 
 function setMode(mode) {
-    disableEditors();
-    tools[mode].button.classList.remove('off');
-    tools[mode].editor.enable();
+  disableEditors();
+  tools[mode].button.classList.remove('off');
+  tools[mode].editor.enable();
 }
 
 function disableEditors() {
-    for (const tool of Object.values(tools)) {
-        tool.editor.disable();
-        tool.button.classList.add('off');
-    }
+  for (const tool of Object.values(tools)) {
+    tool.editor.disable();
+    tool.button.classList.add('off');
+  }
 }
 
 function openOsmPanel() {
-    osmPanel.style.display = 'flex';
+  osmPanel.style.display = 'flex';
 }
 
 function closeOsmPanel() {
-    osmPanel.style.display = 'none';
+  osmPanel.style.display = 'none';
 }
 
 function parseOsmData() {
-    if (osmDataContainer.value === '') {
-        alert('Paste data first!');
-        return;
-    }
-    dispose();
-    const res = Osm.parse(JSON.parse(osmDataContainer.value));
-    graph.points = res.points;
-    graph.segments = res.segments;
-    world.buildings = res.buildings;
-    viewport.offset = scale(res.center, -1);
-    closeOsmPanel();
+  if (osmDataContainer.value === '') {
+    alert('Paste data first!');
+    return;
+  }
+  dispose();
+  const res = Osm.parse(JSON.parse(osmDataContainer.value));
+  graph.points = res.points;
+  graph.segments = res.segments;
+  world.buildings = res.buildings;
+  viewport.offset = scale(res.center, -1);
+  closeOsmPanel();
 }

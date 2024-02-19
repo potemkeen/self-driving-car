@@ -22,6 +22,10 @@ export class ItemEditor {
 
   disable() {
     this.#removeEventListeners();
+    this.mouseInitPos = null;
+    this.selected = null;
+    this.selectedBaseInit = null;
+    this.hovered = null;
   }
 
   #addEventListeners() {

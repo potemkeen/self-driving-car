@@ -1,10 +1,21 @@
 import { add, distance, dot, magnitude, normalize, scale, subtract } from '../math/utils';
+import { Point } from './point';
 
 export class Segment {
     constructor(p1, p2, oneWay = false) {
         this.p1 = p1;
         this.p2 = p2;
         this.oneWay = oneWay;
+    }
+
+    static load(info, points = []) {
+        const p1 = points.find((p) => p.equals(info.p1)) ?? new Point(info.p1.x, info.p1.y);
+        const p2 = points.find((p) => p.equals(info.p2)) ?? new Point(info.p2.x, info.p2.y);
+        return new Segment(p1, p2, Boolean(info.o));
+    }
+
+    toJSON() {
+        return { p1: this.p1, p2: this.p2, ...(this.oneWay && { o: 1 }) };
     }
 
     length() {

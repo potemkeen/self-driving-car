@@ -12,9 +12,16 @@ export class Envelope {
 
     static load(info) {
         const env = new Envelope();
-        env.skeleton = new Segment(info.skeleton.p1, info.skeleton.p2);
-        env.poly = Polygon.load(info.poly);
+        env.skeleton = new Segment(info.s.p1, info.s.p2);
+        env.poly = Polygon.load(info.p);
         return env;
+    }
+
+    toJSON() {
+        return {
+            s: this.skeleton,
+            p: this.poly,
+        };
     }
 
     #generatePolygon(width, roundness) {

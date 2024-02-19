@@ -5,7 +5,17 @@ import { NeuralNetwork } from './network';
 import carImg from '../static/car.png';
 
 export class Car {
-  constructor(x, y, width, height, controlType, angle = 0, maxSpeed = 3, color) {
+  constructor(
+    x,
+    y,
+    width,
+    height,
+    controlType,
+    angle = 0,
+    maxSpeed = 3,
+    color,
+    isTexture = false,
+  ) {
     this.x = x;
     this.y = y;
     this.width = width;
@@ -29,17 +39,20 @@ export class Car {
     this.polygon = [];
 
     this._color = color;
-    this.img = new Image();
-    this.img.src = carImg;
+    this.isTexture = isTexture;
+    if (isTexture) {
+      this.img = new Image();
+      this.img.src = carImg;
 
-    this.mask = document.createElement('canvas');
-    this.mask.width = width;
-    this.mask.height = height;
+      this.mask = document.createElement('canvas');
+      this.mask.width = width;
+      this.mask.height = height;
 
-    this.maskCtx = this.mask.getContext('2d');
-    this.img.onload = () => {
-      this.#drawImage();
-    };
+      this.maskCtx = this.mask.getContext('2d');
+      this.img.onload = () => {
+        this.#drawImage();
+      };
+    }
   }
 
   #drawImage() {
@@ -53,7 +66,9 @@ export class Car {
 
   set color(color) {
     this._color = color;
-    this.#drawImage();
+    if (this.isTexture) {
+      this.#drawImage();
+    }
   }
 
   update(roadBorders, traffic) {
@@ -67,7 +82,7 @@ export class Car {
     if (this.sensor) {
       this.sensor.update(roadBorders, traffic);
       const offsets = this.sensor.readings.map((r) =>
-          r === null ? 0 : 1 - r.offset,
+        r === null ? 0 : 1 - r.offset,
       );
       const outputs = NeuralNetwork.feedForward(offsets, this.brain);
 
@@ -82,8 +97,8 @@ export class Car {
   }
 
   #assessDamage(roadBorders, traffic) {
-    for (let i = 0; i < roadBorders.length; i++) {
-      if (polysIntersect(this.polygon, roadBorders[i])) {
+    for (const border of roadBorders) {
+      if (polysIntersect(this.polygon, [border.p1, border.p2])) {
         return true;
       }
     }
@@ -167,23 +182,31 @@ export class Car {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(-this.angle);
-    if (!this.damaged) {
+
+    if (this.isTexture) {
+      if (!this.damaged) {
+        ctx.drawImage(
+          this.mask,
+          -this.width / 2,
+          -this.height / 2,
+          this.width,
+          this.height,
+        );
+        ctx.globalCompositeOperation = 'multiply';
+      }
       ctx.drawImage(
-        this.mask,
+        this.img,
         -this.width / 2,
         -this.height / 2,
         this.width,
         this.height,
       );
-      ctx.globalCompositeOperation = 'multiply';
+    } else {
+      ctx.beginPath();
+      ctx.fillStyle = this._color;
+      ctx.rect(-this.width / 2, -this.height / 2, this.width, this.height);
+      ctx.fill();
     }
-    ctx.drawImage(
-      this.img,
-      -this.width / 2,
-      -this.height / 2,
-      this.width,
-      this.height,
-    );
     ctx.restore();
   }
 }

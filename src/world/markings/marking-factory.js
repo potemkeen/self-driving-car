@@ -9,25 +9,25 @@ import { Point } from '../primitives/point';
 import { Stop } from './stop';
 
 export function createMarking(info) {
-    const point = new Point(info.center.x, info.center.y);
-    const dir = new Point(info.directionVector.x, info.directionVector.y);
-    const {width, height} = info;
-    switch (info.type) {
+    const point = new Point(info.c.x, info.c.y);
+    const dir = new Point(info.dv.x, info.dv.y);
+    const {w, h} = info;
+    switch (info.t) {
         case 'crossing':
-            return new Crossing(point, dir, width, height);
+            return new Crossing(point, dir, w, h);
         case 'light':
-            return new Light(point, dir, width, height);
+            return new Light(point, dir, w, h);
         case 'marking':
-            return new Marking(point, dir, width, height);
+            return new Marking(point, dir, w, h);
         case 'parking':
-            return new Parking(point, dir, width, height);
+            return new Parking(point, dir, w, h);
         case 'start':
-            return new Start(point, dir, width, height);
+            return new Start(point, dir, w, h);
         case 'stop':
-            return new Stop(point, dir, width, height);
+            return new Stop(point, dir, w, h);
         case 'target':
-            return new Target(point, dir, width, height);
+            return new Target(point, dir, w, h);
         case 'yield':
-            return new Yield(point, dir, width, height);
+            return new Yield(point, dir, w, h);
     }
 }

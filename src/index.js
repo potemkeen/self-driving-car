@@ -1,8 +1,8 @@
 import { Car } from './car';
 import { Visualizer } from './visualizier';
 import { NeuralNetwork } from './network';
-import initBrain from './brain.json';
-import initWorld from './world.json';
+import initBrain from './saves/init.brain';
+import initWorld from './saves/init.world';
 import { World } from './world/world';
 import { Graph } from './world/math/graph';
 import { Viewport } from './world/viewport';
@@ -19,29 +19,27 @@ const visitedBefore = localStorage.getItem(VISITED_LS_KEY);
 if (!visitedBefore) {
   localStorage.setItem(VISITED_LS_KEY, true.toString());
   if (!localStorage.getItem(BRAIN_LS_KEY)) {
-    localStorage.setItem(BRAIN_LS_KEY, JSON.stringify(initBrain));
+    localStorage.setItem(BRAIN_LS_KEY, initBrain);
   }
   if (!localStorage.getItem(WORLD_LS_KEY)) {
-    localStorage.setItem(WORLD_LS_KEY, JSON.stringify(initWorld));
+    localStorage.setItem(WORLD_LS_KEY, initWorld);
   }
 }
 
 const fileInput = document.getElementById('file-input');
 fileInput.addEventListener('change', loadWorld);
 
-const buttonsContainer = document.getElementById('buttons');
-
 const minimapCanvas = document.getElementById('minimap-canvas');
-minimapCanvas.width = 300;
-minimapCanvas.height = 300;
+minimapCanvas.width = 400;
+minimapCanvas.height = 400;
 
 const networkCanvas = document.getElementById('network-canvas');
 networkCanvas.height = window.innerHeight - minimapCanvas.height;
-networkCanvas.width = 300;
+networkCanvas.width = 400;
 
 const carCanvas = document.getElementById('car-canvas');
 carCanvas.height = window.innerHeight;
-carCanvas.width = window.innerWidth - buttonsContainer.clientWidth - networkCanvas.width;
+carCanvas.width = window.innerWidth - networkCanvas.width;
 
 const saveButton = document.getElementById('save');
 const discardButton = document.getElementById('discard');
@@ -72,20 +70,19 @@ const worldString = localStorage.getItem(WORLD_LS_KEY);
 const worldInfo = worldString ? JSON.parse(worldString) : null;
 let world = worldInfo ? World.load(worldInfo) : new World(new Graph());
 const viewport = new Viewport(carCanvas, world.zoom, world.offset);
-const minimap = new Minimap(minimapCanvas, world.graph, 300);
+const minimap = new Minimap(minimapCanvas, world.graph, 400);
 
 let fastForwardMultiplier = 1;
 let mutationAmount = 0.1;
 
 let carCount = 100;
 let cars = [];
-const roadBorders = world.roadBorders.map((s) => [s.p1, s.p2]);
 let bestCar;
 
 let isStarted = false;
 
 window.onresize = () => {
-  carCanvas.width = window.innerWidth - buttonsContainer.clientWidth - networkCanvas.width;
+  carCanvas.width = window.innerWidth - networkCanvas.width;
   carCanvas.height = window.innerHeight;
   networkCanvas.height = window.innerHeight - minimapCanvas.height;
   viewport.center.x = carCanvas.width / 2;
@@ -126,6 +123,7 @@ function start() {
   isStarted = true;
   cars = generateCars(carCount);
   bestCar = cars[0];
+  bestCar.color = 'yellow';
   const brainJSON = localStorage.getItem(BRAIN_LS_KEY);
   if (brainJSON) {
     for (let i = 0; i < cars.length; i++) {
@@ -165,8 +163,8 @@ function fitnessFunc(bestCar, car) {
 }
 
 function update() {
-  for (let i = 0; i < cars.length; i++) {
-    cars[i].update(roadBorders, []);
+  for (const car of cars) {
+    car.update(world.roadBorders, []);
   }
 
   bestCar = cars.reduce(fitnessFunc);
@@ -183,14 +181,9 @@ function draw(time) {
   const viewPoint = scale(viewport.getOffset(), -1);
   const renderRadius = Math.hypot(carCanvas.width, carCanvas.height)/2 * viewport.zoom;
   world.draw(carCtx, viewPoint, false, renderRadius);
-  carCtx.beginPath();
-  carCtx.strokeStyle = 'red';
-  carCtx.arc(viewPoint.x, viewPoint.y, renderRadius, 0, Math.PI * 2);
-  carCtx.stroke();
-  minimap.update(viewPoint)
+  minimap.update(viewPoint, bestCar, cars);
 
-  networkCtx.rect(0, 0, networkCanvas.width, networkCanvas.height);
-  networkCtx.fillStyle = 'black';
+  networkCtx.clearRect(0, 0, networkCanvas.width, networkCanvas.height);
   networkCtx.fill();
   networkCtx.lineDashOffset = -time / 50;
   Visualizer.drawNetwork(networkCtx, bestCar.brain);

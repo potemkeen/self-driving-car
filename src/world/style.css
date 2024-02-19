@@ -1,6 +1,9 @@
 body {
     background-color: black;
     text-align: center;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 h1 {
@@ -12,7 +15,16 @@ h1 {
     background-color: #2a5;
 }
 
-button, .file-input-label {
+#controls {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    top: 20px;
+    left: 20px;
+    gap: 0.5rem;
+}
+
+.button {
     display: inline-block;
     background-color: white;
     font-size: 20px;
@@ -21,9 +33,10 @@ button, .file-input-label {
     border-radius: 5px;
     text-shadow: 1px 1px black;
     cursor: pointer;
+    text-decoration: none;
 }
 
-button.off {
+.button.off {
     background-color: grey;
     filter: grayscale(100%);
 }

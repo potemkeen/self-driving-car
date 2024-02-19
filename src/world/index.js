@@ -11,6 +11,7 @@ import { TargetEditor } from './editors/target-editor';
 import { LightEditor } from './editors/light-editor';
 import { World } from './world';
 import { Osm } from './math/osm';
+import { BuildingEditor } from './editors/building-editor';
 
 const editors = {
     graph: GraphEditor,
@@ -21,6 +22,7 @@ const editors = {
     light: LightEditor,
     yield: YieldEditor,
     target: TargetEditor,
+    building: BuildingEditor,
 };
 
 const canvas = document.getElementById('canvas');
@@ -40,8 +42,8 @@ osmBtn.addEventListener('click', openOsmPanel);
 osmCloseBtn.addEventListener('click', closeOsmPanel);
 osmParseBtn.addEventListener('click', parseOsmData);
 
-canvas.width = 600;
-canvas.height = 600;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
 const ctx = canvas.getContext('2d');
 
@@ -57,7 +59,14 @@ for (const title in editors) {
     const btn = document.getElementById(title);
     btn.addEventListener('click', () => setMode(title));
     const Editor = editors[title];
-    tools[title] = {button: btn, editor: new Editor(viewport, title === 'graph' ? graph : world)};
+    let data = world;
+    if (title === 'graph') {
+        data = graph;
+    }
+    if (title === 'building') {
+        data = world.buildings
+    }
+    tools[title] = {button: btn, editor: new Editor(viewport, data)};
 }
 
 let oldGraphHash = graph.hash();
@@ -65,7 +74,6 @@ let oldGraphHash = graph.hash();
 setMode('graph');
 
 animate();
-
 function animate() {
     viewport.reset();
     if (graph.hash() !== oldGraphHash) {
@@ -84,6 +92,7 @@ function animate() {
 
 function dispose() {
     tools.graph && tools.graph.editor.dispose();
+    world.buildings.length = 0;
     world.markings.length = 0;
 }
 
@@ -153,8 +162,11 @@ function parseOsmData() {
         alert('Paste data first!');
         return;
     }
-    const res = Osm.parseRoads(JSON.parse(osmDataContainer.value));
+    dispose();
+    const res = Osm.parse(JSON.parse(osmDataContainer.value));
     graph.points = res.points;
     graph.segments = res.segments;
+    world.buildings = res.buildings;
+    viewport.offset = scale(res.center, -1);
     closeOsmPanel();
 }

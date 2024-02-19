@@ -9,10 +9,7 @@ export class Graph {
 
     static load(info) {
         const points = info.points.map((p) => new Point(p.x, p.y));
-        const segments = info.segments.map((seg) => new Segment(
-            points.find((p) => p.equals(seg.p1)),
-            points.find((p) => p.equals(seg.p2)),
-        ));
+        const segments = info.segments.map((seg) => Segment.load(seg, points));
 
         return new Graph(points, segments);
     }

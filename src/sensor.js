@@ -22,12 +22,12 @@ export class Sensor {
   #getReading(ray, roadBorders, traffic) {
     let touches = [];
 
-    for (let i = 0; i < roadBorders.length; i++) {
+    for (const border of roadBorders) {
       const touch = getIntersection(
         ray[0],
         ray[1],
-        roadBorders[i][0],
-        roadBorders[i][1],
+        border.p1,
+        border.p2,
       );
       if (touch) {
         touches.push(touch);

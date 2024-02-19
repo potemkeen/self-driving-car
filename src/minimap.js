@@ -12,9 +12,14 @@ export class Minimap {
     this.ctx = canvas.getContext('2d');
   }
 
-  update(viewPoint) {
+  update(viewPoint, bestCar, cars) {
     this.ctx.clearRect(0, 0, this.size, this.size);
-
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = 'yellow';
+    this.ctx.arc(this.size / 2, this.size / 2, this.size / 2 - 20, 0, Math.PI * 2);
+    this.ctx.closePath();
+    this.ctx.clip();
+    this.ctx.stroke();
     const scaler = 0.05;
     const scaledViewPoint = scale(viewPoint, -scaler);
     this.ctx.save();
@@ -26,7 +31,12 @@ export class Minimap {
     for (const seg of this.graph.segments) {
       seg.draw(this.ctx, { width: 3 / scaler, color: 'white' });
     }
+    cars.forEach((car) => {
+      if (!car.damaged) {
+        new Point(car.x, car.y).draw(this.ctx, { color: 'blue', size: 10 / scaler });
+      }
+    })
+    new Point(bestCar.x, bestCar.y).draw(this.ctx, { color: 'blue', outline: true, size: 15 / scaler });
     this.ctx.restore();
-    new Point(this.size / 2, this.size / 2).draw(this.ctx, { color: 'blue', outline: true });
   }
 }

@@ -12,88 +12,45 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+}
+
+#canvas {
+    background-color: #2a5;
 }
 
 #car-canvas {
     background: #2a5;
 }
 
-#network-canvas {
-    background: black;
+body {
+    background-color: black;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
-#minimap-canvas {
-    background: black;
+h1 {
+    color: white;
+    font-family: 'Arial', sans-serif;
 }
 
-.buttons {
+.controls {
+    position: absolute;
     display: flex;
     flex-direction: column;
-    padding: 0 20px;
-    gap: 10px;
-}
-
-.button, .select {
-    appearance: none;
-    background-color: #FAFBFC;
-    border: 1px solid rgba(27, 31, 35, 0.15);
-    border-radius: 6px;
-    box-shadow: rgba(27, 31, 35, 0.04) 0 1px 0, rgba(255, 255, 255, 0.25) 0 1px 0 inset;
-    box-sizing: border-box;
-    color: #24292E;
-    cursor: pointer;
-    display: inline-block;
-    font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 20px;
-    list-style: none;
-    padding: 6px 16px;
-    position: relative;
-    transition: background-color 0.2s cubic-bezier(0.3, 0, 0.5, 1);
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: manipulation;
-    vertical-align: middle;
-    white-space: nowrap;
-    word-wrap: break-word;
-}
-
-.button:hover {
-    background-color: #F3F4F6;
-    text-decoration: none;
-    transition-duration: 0.1s;
-}
-
-.button:disabled {
-    background-color: #FAFBFC;
-    border-color: rgba(27, 31, 35, 0.15);
-    color: #959DA5;
-    cursor: default;
-}
-
-.button:active {
-    background-color: #EDEFF2;
-    box-shadow: rgba(225, 228, 232, 0.2) 0 1px 0 inset;
-    transition: none 0s;
-}
-
-.button:focus {
-    outline: 1px transparent;
-}
-
-.button:before {
-    display: none;
-}
-
-.select {
-    display: flex;
-    flex-direction: column;
+    top: 20px;
+    left: 20px;
     gap: 0.5rem;
 }
 
-.file-input-label {
-    display: inline-block;
+.button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
     background-color: white;
     font-size: 20px;
     padding: 5px 7px 7px 5px;
@@ -101,6 +58,12 @@ body {
     border-radius: 5px;
     text-shadow: 1px 1px black;
     cursor: pointer;
+    text-decoration: none;
+}
+
+.button.off {
+    background-color: grey;
+    filter: grayscale(100%);
 }
 
 input[type="file"] {
@@ -119,4 +82,8 @@ input[type="file"] {
     justify-content: center;
     align-items: center;
     flex-direction: column;
+}
+
+.right-panel {
+    background-color: rgb(34, 34, 34);;
 }

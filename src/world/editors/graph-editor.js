@@ -6,6 +6,7 @@ export class GraphEditor {
         this.viewport = viewport;
         this.canvas = viewport.canvas;
         this.graph = graph;
+        this.isEnabled = false;
 
         this.ctx = this.canvas.getContext('2d');
 
@@ -17,12 +18,14 @@ export class GraphEditor {
 
     enable() {
         this.#addEventListeners();
+        this.isEnabled = true;
     }
 
     disable() {
         this.#removeEventListeners();
         this.selected = null;
         this.hovered = null;
+        this.isEnabled = false;
     }
 
     #addEventListeners() {
@@ -94,6 +97,9 @@ export class GraphEditor {
     }
 
     display() {
+        if (!this.isEnabled) {
+            return;
+        }
         this.graph.draw(this.ctx);
         if (this.hovered) {
             this.hovered.draw(this.ctx, {fill: true});

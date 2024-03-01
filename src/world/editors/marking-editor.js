@@ -4,6 +4,7 @@ export class MarkingEditor {
     constructor(viewport, world, targetSegments) {
         this.viewport = viewport;
         this.world = world;
+        this.isEnabled = false;
 
         this.canvas = viewport.canvas;
         this.ctx = this.canvas.getContext('2d');
@@ -23,10 +24,12 @@ export class MarkingEditor {
 
     enable() {
         this.#addEventListeners();
+        this.isEnabled = true;
     }
 
     disable() {
         this.#removeEventListeners();
+        this.isEnabled = false;
     }
 
     #addEventListeners() {
@@ -85,6 +88,9 @@ export class MarkingEditor {
     }
 
     display() {
+        if (!this.isEnabled) {
+            return;
+        }
         if (this.intent) {
             this.intent.draw(this.ctx);
         }

@@ -317,11 +317,13 @@ export class World {
     }
     ctx.globalAlpha = 0.2;
     for (const car of this.cars) {
-      car.draw(ctx);
+      if (car !== this.bestCar) {
+        car.draw(ctx);
+      }
     }
     ctx.globalAlpha = 1;
     if (this.bestCar) {
-      this.bestCar.draw(ctx);
+      this.bestCar.draw(ctx, true);
     }
 
     const items = [...this.buildings, ...this.trees].filter(

@@ -5,6 +5,7 @@ export class ItemEditor {
   constructor(viewport, items) {
     this.viewport = viewport;
     this.items = items;
+    this.isEnabled = false;
 
     this.canvas = viewport.canvas;
     this.ctx = this.canvas.getContext('2d');
@@ -18,6 +19,7 @@ export class ItemEditor {
 
   enable() {
     this.#addEventListeners();
+    this.isEnabled = true;
   }
 
   disable() {
@@ -26,6 +28,7 @@ export class ItemEditor {
     this.selected = null;
     this.selectedBaseInit = null;
     this.hovered = null;
+    this.isEnabled = false;
   }
 
   #addEventListeners() {
@@ -91,6 +94,9 @@ export class ItemEditor {
   }
 
   display() {
+    if (!this.isEnabled) {
+      return;
+    }
     const viewPoint = scale(this.viewport.getOffset(), -1);
     if (this.hovered) {
       this.hovered.draw(this.ctx, viewPoint, { color: 'red' });

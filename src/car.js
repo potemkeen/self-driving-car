@@ -22,7 +22,7 @@ export class Car {
     this.height = height;
 
     this.speed = 0;
-    this.accelaretion = 0.2;
+    this.acceleration = 0.2;
     this.maxSpeed = maxSpeed;
     this.friction = 0.05;
     this.angle = angle;
@@ -33,7 +33,9 @@ export class Car {
 
     if (controlType !== 'DUMMY') {
       this.sensor = new Sensor(this);
-      this.brain = new NeuralNetwork([this.sensor.rayCount, 6, 4]);
+      this.stopSensor = new Sensor(this);
+      const inputCount = this.sensor.rayCount + 1;
+      this.brain = new NeuralNetwork([inputCount, 6, 4]);
     }
     this.controls = new Controls(controlType);
     this.polygon = [];
@@ -71,6 +73,17 @@ export class Car {
     }
   }
 
+  load(info) {
+    this.brain = info.brain;
+    this.maxSpeed = info.maxSpeed;
+    this.friction = info.friction;
+    this.acceleration = info.acceleration;
+    this.sensor.rayCount = info.sensor.rayCount;
+    this.sensor.raySpread = info.sensor.raySpread;
+    this.sensor.rayLength = info.sensor.rayLength;
+    this.sensor.rayOffset = info.sensor.rayOffset;
+  }
+
   update(roadBorders, traffic) {
     if (this.damaged) {
       return;
@@ -84,7 +97,8 @@ export class Car {
       const offsets = this.sensor.readings.map((r) =>
         r === null ? 0 : 1 - r.offset,
       );
-      const outputs = NeuralNetwork.feedForward(offsets, this.brain);
+      const speedInput = this.speed / this.maxSpeed;
+      const outputs = NeuralNetwork.feedForward([...offsets, speedInput], this.brain);
 
       if (this.useBrain) {
         this.controls.forward = outputs[0];
@@ -141,10 +155,10 @@ export class Car {
 
   #move() {
     if (this.controls.forward) {
-      this.speed += this.accelaretion;
+      this.speed += this.acceleration;
     }
     if (this.controls.reverse) {
-      this.speed -= this.accelaretion;
+      this.speed -= this.acceleration;
     }
     if (this.speed > this.maxSpeed) {
       this.speed = this.maxSpeed;

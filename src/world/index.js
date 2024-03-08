@@ -77,12 +77,19 @@ if (world.graph.points.length === 0) {
   setMode('graph');
 }
 
+window.onresize = () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  viewport.center.x = canvas.width / 2;
+  viewport.center.y = canvas.height / 2;
+};
+
 animate();
 
 function animate() {
   viewport.reset();
   if (graph.hash() !== oldGraphHash) {
-    world.generate();
+    // world.generate();
     oldGraphHash = graph.hash();
   }
   const viewPoint = scale(viewport.getOffset(), -1);

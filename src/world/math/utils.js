@@ -41,16 +41,15 @@ export function getNearestItem(
 ) {
   let minDist = Number.MAX_SAFE_INTEGER;
   let nearest = null;
-  for (const i of items) {
-    const contains = i.base.containsPoint(loc);
+  for (const item of items) {
+    const contains = item.base.containsPoint(loc);
     if (contains) {
-      return i;
-    } else {
-      const dist = i.base.distanceToPoint(loc);
-      if (dist < minDist && dist < threshold) {
-        minDist = dist;
-        nearest = i;
-      }
+      return item;
+    }
+    const dist = item.base.distanceToPoint(loc);
+    if (dist < minDist && dist < threshold) {
+      minDist = dist;
+      nearest = item;
     }
   }
   return nearest;

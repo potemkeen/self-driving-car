@@ -3,6 +3,7 @@ import { Visualizer } from './visualizier';
 import { NeuralNetwork } from './network';
 import initBrain from './saves/init.brain';
 import initWorld from './saves/init.world';
+import rightHandRuleCar from './saves/right_hand_rule.car';
 import { World } from './world/world';
 import { Graph } from './world/math/graph';
 import { Viewport } from './world/viewport';
@@ -149,23 +150,24 @@ function generateCars(n) {
   const startAngle = -angle(dir) + Math.PI / 2;
   const cars = [];
   for (let i = 1; i <= n; i++) {
-    cars.push(
-      new Car(
-        startPoint.x,
-        startPoint.y,
-        30,
-        50,
-        'AI',
-        startAngle,
-        3,
-        'blue',
-        n < 100,
-      ),
+    const car = new Car(
+      startPoint.x,
+      startPoint.y,
+      30,
+      50,
+      'AI',
+      startAngle,
+      3,
+      'blue',
+      n < 100,
     );
+    car.load(JSON.parse(rightHandRuleCar));
+    cars.push(car);
   }
 
   return cars;
 }
+
 function fitnessFunc(bestCar, car) {
   return car.fittness > bestCar.fittness ? car : bestCar;
 }

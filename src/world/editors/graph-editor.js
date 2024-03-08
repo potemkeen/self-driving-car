@@ -37,18 +37,6 @@ export class GraphEditor {
     this.canvas.addEventListener('mousemove', this.boundMouseMove);
     this.canvas.addEventListener('mouseup', this.boundMouseUp);
     this.canvas.addEventListener('contextmenu', this.boundContextMenu);
-
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'KeyS') {
-        this.start = this.mouse;
-      }
-      if (e.code === 'KeyE') {
-        this.end = this.mouse;
-      }
-      if (this.start && this.end) {
-        window.world.generateCorridor(this.start, this.end);
-      }
-    });
   }
 
   #removeEventListeners() {

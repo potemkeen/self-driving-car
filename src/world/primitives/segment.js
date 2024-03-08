@@ -27,6 +27,10 @@ export class Segment {
     }
 
     equals(seg) {
+        if (this === seg) {
+            return true;
+        }
+
         return this.includes(seg.p1) && this.includes(seg.p2);
     }
 

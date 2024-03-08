@@ -11,6 +11,7 @@ import { angle, scale } from './world/math/utils';
 import { Start } from './world/markings/start';
 import { Point } from './world/primitives/point';
 import { Minimap } from './minimap';
+import { Target } from './world/markings/target';
 
 const BRAIN_LS_KEY = 'brain';
 const WORLD_LS_KEY = 'world';
@@ -72,6 +73,7 @@ const worldInfo = worldString ? JSON.parse(worldString) : null;
 let world = worldInfo ? World.load(worldInfo) : new World(new Graph());
 const viewport = new Viewport(carCanvas, world.zoom, world.offset);
 const minimap = new Minimap(minimapCanvas, world.graph, 400);
+let roadBorders = world.roadBorders;
 
 let fastForwardMultiplier = parseInt(fastForwardMultiplierSelect.value);
 let mutationAmount = parseFloat(mutationAmountSelect.value);
@@ -133,6 +135,11 @@ function start() {
       }
     }
   }
+  const target = world.markings.find((m) => m instanceof Target);
+  if (target) {
+    world.generateCorridor(world.bestCar, target.center);
+    roadBorders = world.corridor;
+  }
   requestAnimationFrame(animate);
 }
 
@@ -174,7 +181,7 @@ function fitnessFunc(bestCar, car) {
 
 function update() {
   for (const car of world.cars) {
-    car.update(world.roadBorders, []);
+    car.update(roadBorders, []);
   }
 
   world.bestCar = world.cars.reduce(fitnessFunc);

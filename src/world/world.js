@@ -1,6 +1,6 @@
 import { Envelope } from './primitives/envelope';
 import { Polygon } from './primitives/polygon';
-import { add, distance, getNearestPoint, lerp, scale } from './math/utils';
+import { add, distance, getNearestPoint, getNearestSegment, lerp, scale } from './math/utils';
 import { Segment } from './primitives/segment';
 import { Point } from './primitives/point';
 import { Tree } from './items/tree';
@@ -95,6 +95,44 @@ export class World {
 
     this.laneGuides.length = 0;
     this.laneGuides.push(...this.#generateLaneGuides());
+  }
+
+  generateCorridor(start, end) {
+    const startSeg = getNearestSegment(start, this.graph.segments);
+    const endSeg = getNearestSegment(end, this.graph.segments);
+
+    const { point: projStart } = startSeg.projectPoint(start);
+    const { point: projEnd } = endSeg.projectPoint(end);
+
+    let path;
+    if (startSeg.equals(endSeg)) {
+      path = [projStart, projEnd];
+    } else {
+      this.graph.points.push(projStart);
+      this.graph.points.push(projEnd);
+
+      const tmpSegs = [
+        new Segment(startSeg.p1, projStart),
+        new Segment(projStart, startSeg.p2),
+        new Segment(endSeg.p1, projEnd),
+        new Segment(projEnd, endSeg.p2),
+      ];
+
+      this.graph.segments = this.graph.segments.concat(tmpSegs);
+
+      path = this.graph.getShortestPath(projStart, projEnd);
+
+      this.graph.removePoint(projStart);
+      this.graph.removePoint(projEnd);
+    }
+
+    const segs = [];
+    for (let i = 1; i < path.length; i++) {
+      segs.push(new Segment(path[i - 1], path[i]));
+    }
+    const tmpEnvelopes = segs.map((s) => new Envelope(s, this.roadWidth, this.roadRoundness));
+
+    this.corridor = Polygon.union(tmpEnvelopes.map((e) => e.poly));
   }
 
   #generateEnvelopes() {
@@ -314,6 +352,11 @@ export class World {
     }
     for (const seg of this.roadBorders) {
       seg.draw(ctx, { color: 'white', width: 4 });
+    }
+    if (this.corridor) {
+      for (const seg of this.corridor) {
+        seg.draw(ctx, { color: 'red', width: 4 });
+      }
     }
     ctx.globalAlpha = 0.2;
     for (const car of this.cars) {

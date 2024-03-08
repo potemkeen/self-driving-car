@@ -50,6 +50,7 @@ const ctx = canvas.getContext('2d');
 const worldString = localStorage.getItem('world');
 const worldInfo = worldString ? JSON.parse(worldString) : null;
 let world = worldInfo ? World.load(worldInfo) : new World(new Graph());
+window.world = world;
 const graph = world.graph;
 
 const viewport = new Viewport(canvas, world.zoom, world.offset);
@@ -89,7 +90,7 @@ animate();
 function animate() {
   viewport.reset();
   if (graph.hash() !== oldGraphHash) {
-    // world.generate();
+    world.generate();
     oldGraphHash = graph.hash();
   }
   const viewPoint = scale(viewport.getOffset(), -1);

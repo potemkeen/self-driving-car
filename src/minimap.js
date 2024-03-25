@@ -16,9 +16,11 @@ export class Minimap {
     this.ctx.clearRect(0, 0, this.size, this.size);
     this.ctx.beginPath();
     this.ctx.strokeStyle = 'yellow';
+    this.ctx.fillStyle = '#000';
     this.ctx.arc(this.size / 2, this.size / 2, this.size / 2 - 20, 0, Math.PI * 2);
     this.ctx.closePath();
     this.ctx.clip();
+    this.ctx.fill();
     this.ctx.stroke();
     const scaler = 0.05;
     const scaledViewPoint = scale(viewPoint, -scaler);

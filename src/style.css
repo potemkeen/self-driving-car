@@ -87,3 +87,39 @@ input[type="file"] {
 .right-panel {
     background-color: rgb(34, 34, 34);;
 }
+
+.minimap {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    opacity: 0.7;
+}
+
+#statistics {
+    background: black;
+    position: absolute;
+    right: 20px;
+    top: 30px;
+    border-radius: 10px;
+    opacity: 0.7;
+    overflow: hidden;
+}
+
+.stat {
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#counter {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40vmin;
+    font-family: Arial, sans-serif;
+    opacity: 50%;
+    color: white;
+}

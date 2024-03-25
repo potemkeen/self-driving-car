@@ -1,6 +1,13 @@
 import { Envelope } from './primitives/envelope';
 import { Polygon } from './primitives/polygon';
-import { add, distance, getNearestPoint, getNearestSegment, lerp, scale } from './math/utils';
+import {
+  add,
+  distance,
+  getNearestPoint,
+  getNearestSegment,
+  lerp,
+  scale,
+} from './math/utils';
 import { Segment } from './primitives/segment';
 import { Point } from './primitives/point';
 import { Tree } from './items/tree';
@@ -97,7 +104,7 @@ export class World {
     this.laneGuides.push(...this.#generateLaneGuides());
   }
 
-  generateCorridor(start, end) {
+  generateCorridor(start, end, extendEnd = false) {
     const startSeg = getNearestSegment(start, this.graph.segments);
     const endSeg = getNearestSegment(end, this.graph.segments);
 
@@ -130,9 +137,27 @@ export class World {
     for (let i = 1; i < path.length; i++) {
       segs.push(new Segment(path[i - 1], path[i]));
     }
-    const tmpEnvelopes = segs.map((s) => new Envelope(s, this.roadWidth, this.roadRoundness));
+    if (extendEnd) {
+      const lastSeg = segs[segs.length - 1];
+      const lastSegDir = lastSeg.directionVector();
+      segs.push(
+          new Segment(
+              lastSeg.p2,
+              add(lastSeg.p2, scale(lastSegDir, this.roadWidth * 2)),
+          ),
+      );
+    }
+    const tmpEnvelopes = segs.map(
+      (s) => new Envelope(s, this.roadWidth, this.roadRoundness),
+    );
+    if (extendEnd) {
+      segs.pop();
+    }
 
-    this.corridor = Polygon.union(tmpEnvelopes.map((e) => e.poly));
+    this.corridor = {
+      borders: Polygon.union(tmpEnvelopes.map((e) => e.poly)),
+      skeleton: segs,
+    };
   }
 
   #generateEnvelopes() {
@@ -354,7 +379,7 @@ export class World {
       seg.draw(ctx, { color: 'white', width: 4 });
     }
     if (this.corridor) {
-      for (const seg of this.corridor) {
+      for (const seg of this.corridor.borders) {
         seg.draw(ctx, { color: 'red', width: 4 });
       }
     }
@@ -366,7 +391,7 @@ export class World {
     }
     ctx.globalAlpha = 1;
     if (this.bestCar) {
-      this.bestCar.draw(ctx, true);
+      this.bestCar.draw(ctx, this.bestCar.useBrain);
     }
 
     const items = [...this.buildings, ...this.trees].filter(

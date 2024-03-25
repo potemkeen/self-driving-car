@@ -14,12 +14,14 @@ export class Car {
     angle = 0,
     maxSpeed = 3,
     color,
-    isTexture = false,
+    isTexture = true,
   ) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
+    this.color = color;
+    this.type = controlType;
 
     this.speed = 0;
     this.acceleration = 0.2;
@@ -33,14 +35,12 @@ export class Car {
 
     if (controlType !== 'DUMMY') {
       this.sensor = new Sensor(this);
-      this.stopSensor = new Sensor(this);
       const inputCount = this.sensor.rayCount + 1;
       this.brain = new NeuralNetwork([inputCount, 6, 4]);
     }
     this.controls = new Controls(controlType);
     this.polygon = [];
 
-    this._color = color;
     this.isTexture = isTexture;
     if (isTexture) {
       this.img = new Image();
@@ -58,19 +58,12 @@ export class Car {
   }
 
   #drawImage() {
-    this.maskCtx.fillStyle = this._color;
+    this.maskCtx.fillStyle = this.color;
     this.maskCtx.rect(0, 0, this.width, this.height);
     this.maskCtx.fill();
 
     this.maskCtx.globalCompositeOperation = 'destination-atop';
     this.maskCtx.drawImage(this.img, 0, 0, this.width, this.height);
-  }
-
-  set color(color) {
-    this._color = color;
-    if (this.isTexture) {
-      this.#drawImage();
-    }
   }
 
   load(info) {
@@ -94,13 +87,13 @@ export class Car {
     this.polygon = this.#createPolygon();
     if (this.sensor) {
       this.sensor.update(roadBorders, traffic);
-      const offsets = this.sensor.readings.map((r) =>
-        r === null ? 0 : 1 - r.offset,
-      );
-      const speedInput = this.speed / this.maxSpeed;
-      const outputs = NeuralNetwork.feedForward([...offsets, speedInput], this.brain);
 
       if (this.useBrain) {
+        const offsets = this.sensor.readings.map((r) =>
+            r === null ? 0 : 1 - r.offset,
+        );
+        const speedInput = this.speed / this.maxSpeed;
+        const outputs = NeuralNetwork.feedForward([...offsets, speedInput], this.brain)
         this.controls.forward = outputs[0];
         this.controls.left = outputs[1];
         this.controls.right = outputs[2];
@@ -217,7 +210,7 @@ export class Car {
       );
     } else {
       ctx.beginPath();
-      ctx.fillStyle = this.damaged ? 'gray' : this._color;
+      ctx.fillStyle = this.damaged ? 'gray' : this.color;
       ctx.rect(-this.width / 2, -this.height / 2, this.width, this.height);
       ctx.fill();
     }
